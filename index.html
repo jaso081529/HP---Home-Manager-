@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
+  <meta name="description" content="Lokaler Haushalts- und Aufgabenmanager für nachvollziehbare Dokumentation, Listen und Auswertungen.">
+  <title>Home Manager</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Zum Inhalt springen</a>
+
+  <header class="topbar">
+    <div class="brand-wrap">
+      <div class="brand-mark" aria-hidden="true">HM</div>
+      <div>
+        <div class="brand">Home Manager</div>
+        <div class="subtitle">lokal · privat · nachvollziehbar</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="icon-btn" id="quickAddBtn" type="button" title="Schnelleintrag">＋</button>
+      <button class="icon-btn" id="installBtn" type="button" title="App installieren" hidden>↧</button>
+      <button class="icon-btn" id="themeBtn" type="button" title="Darstellung wechseln" aria-label="Darstellung wechseln">◐</button>
+    </div>
+  </header>
+
+  <nav class="tabs" aria-label="Hauptnavigation">
+    <button class="tab active" data-view="dashboard" type="button">Übersicht</button>
+    <button class="tab" data-view="activities" type="button">Protokoll</button>
+    <button class="tab" data-view="tasks" type="button">Aufgaben</button>
+    <button class="tab" data-view="reports" type="button">Auswertung</button>
+    <button class="tab" data-view="data" type="button">Daten</button>
+    <button class="tab" data-view="settings" type="button">Einstellungen</button>
+  </nav>
+
+  <main id="main" class="container">
+    <section id="dashboard" class="view active" aria-labelledby="dashboardTitle">
+      <div class="hero-card">
+        <div>
+          <p class="eyebrow">HEUTE</p>
+          <h1 id="dashboardTitle">Was wurde erledigt?</h1>
+          <p class="muted">Keine Stoppuhr nötig. Erfasse Arbeit mit Status und Aufwand, damit sichtbar bleibt, was tatsächlich anfällt.</p>
+        </div>
+        <button class="primary" id="heroAddBtn" type="button">＋ Eintrag dokumentieren</button>
+      </div>
+
+      <div class="stat-grid" id="statGrid"></div>
+
+      <div class="grid two">
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">STATUS</p>
+              <h2>7-Tage-Ampel</h2>
+            </div>
+            <span id="weekTraffic" class="traffic-pill neutral">Noch offen</span>
+          </div>
+          <div id="weekProgress" class="progress-stack"></div>
+          <p class="small muted" id="weekTrafficHint"></p>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <p class="eyebrow">OFFEN</p>
+              <h2>Nächste Aufgaben</h2>
+            </div>
+            <button class="link-btn" data-nav="tasks" type="button">Alle anzeigen</button>
+          </div>
+          <div id="nextTasks" class="list compact"></div>
+        </section>
+      </div>
+
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <p class="eyebrow">VERLAUF</p>
+            <h2>Letzte Dokumentation</h2>
+          </div>
+          <button class="link-btn" data-nav="activities" type="button">Zum Protokoll</button>
+        </div>
+        <div id="recentActivities" class="list"></div>
+      </section>
+    </section>
+
+    <section id="activities" class="view" aria-labelledby="activitiesTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">DOKUMENTATION</p>
+          <h1 id="activitiesTitle">Haushaltsprotokoll</h1>
+          <p class="muted">Erledigte, teilweise erledigte oder ausgefallene Tätigkeiten nachvollziehbar festhalten.</p>
+        </div>
+        <button class="primary" id="addActivityBtn" type="button">＋ Neuer Eintrag</button>
+      </div>
+
+      <div class="toolbar card slim">
+        <label class="search-field">
+          <span>⌕</span>
+          <input id="activitySearch" type="search" placeholder="Suchen …" autocomplete="off">
+        </label>
+        <select id="activityStatusFilter" aria-label="Status filtern">
+          <option value="all">Alle Status</option>
+          <option value="done">🟢 Erledigt</option>
+          <option value="partial">🟠 Teilweise</option>
+          <option value="missed">🔴 Nicht erledigt</option>
+        </select>
+        <select id="activityRangeFilter" aria-label="Zeitraum filtern">
+          <option value="7">Letzte 7 Tage</option>
+          <option value="30">Letzte 30 Tage</option>
+          <option value="90">Letzte 90 Tage</option>
+          <option value="all">Gesamt</option>
+        </select>
+      </div>
+
+      <div class="table-wrap card">
+        <table>
+          <thead>
+            <tr><th>Datum</th><th>Tätigkeit</th><th>Kategorie</th><th>Aufwand</th><th>Status</th><th>Person</th><th class="actions-col">Aktion</th></tr>
+          </thead>
+          <tbody id="activityTableBody"></tbody>
+        </table>
+        <div id="activityEmpty" class="empty" hidden></div>
+      </div>
+    </section>
+
+    <section id="tasks" class="view" aria-labelledby="tasksTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">PLANUNG</p>
+          <h1 id="tasksTitle">Aufgaben & Checklisten</h1>
+          <p class="muted">Für wiederkehrende Hausarbeit, Besorgungen und offene Punkte – ohne Zeitmessung.</p>
+        </div>
+        <button class="primary" id="addTaskBtn" type="button">＋ Aufgabe</button>
+      </div>
+
+      <div class="segmented" role="tablist" aria-label="Aufgabenfilter">
+        <button class="seg active" data-task-filter="open" type="button">Offen</button>
+        <button class="seg" data-task-filter="today" type="button">Heute</button>
+        <button class="seg" data-task-filter="overdue" type="button">Überfällig</button>
+        <button class="seg" data-task-filter="done" type="button">Erledigt</button>
+        <button class="seg" data-task-filter="all" type="button">Alle</button>
+      </div>
+      <div id="taskList" class="task-list"></div>
+    </section>
+
+    <section id="reports" class="view" aria-labelledby="reportsTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">AUSWERTUNG</p>
+          <h1 id="reportsTitle">Berichte & Ausdruck</h1>
+          <p class="muted">Übersichtliche Zahlen, Ampelstatus und Tabellen zum Speichern oder Ausdrucken.</p>
+        </div>
+        <button class="primary" id="printReportBtn" type="button">⎙ Bericht drucken</button>
+      </div>
+
+      <div class="toolbar card slim">
+        <label>Zeitraum
+          <select id="reportRange">
+            <option value="7">7 Tage</option>
+            <option value="30" selected>30 Tage</option>
+            <option value="90">90 Tage</option>
+            <option value="all">Gesamt</option>
+          </select>
+        </label>
+        <label>Person
+          <select id="reportMember"><option value="all">Alle</option></select>
+        </label>
+      </div>
+
+      <div id="printArea">
+        <div class="print-only print-title">
+          <h1>Home Manager – Tätigkeitsbericht</h1>
+          <p id="printMeta"></p>
+        </div>
+        <div id="reportStats" class="stat-grid"></div>
+        <div class="grid two report-grid">
+          <section class="card">
+            <div class="card-head"><h2>Statusverteilung</h2></div>
+            <div id="statusChart" class="bar-chart"></div>
+          </section>
+          <section class="card">
+            <div class="card-head"><h2>Kategorien</h2></div>
+            <div id="categoryChart" class="bar-chart"></div>
+          </section>
+        </div>
+        <section class="card">
+          <div class="card-head"><h2>Tätigkeiten im Zeitraum</h2></div>
+          <div class="table-wrap inner">
+            <table>
+              <thead><tr><th>Datum</th><th>Tätigkeit</th><th>Kategorie</th><th>Aufwand</th><th>Status</th><th>Person</th></tr></thead>
+              <tbody id="reportTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <section id="data" class="view" aria-labelledby="dataTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">LOKALE DATEN</p>
+          <h1 id="dataTitle">Import, Export & Sicherung</h1>
+          <p class="muted">Persönliche Daten werden nicht mit GitHub synchronisiert. Du entscheidest selbst, ob du eine Sicherungsdatei exportierst.</p>
+        </div>
+      </div>
+
+      <div class="privacy-banner success">
+        <strong>Privat by Design:</strong> Einträge, Namen und Notizen werden ausschließlich lokal im Browser gespeichert. Der öffentliche App-Code enthält keine Haushaltsdaten.
+      </div>
+
+      <div class="grid two">
+        <section class="card">
+          <h2>Sicherung</h2>
+          <p class="muted">JSON enthält alle lokalen App-Daten und Einstellungen. CSV ist praktisch für Tabellenprogramme.</p>
+          <div class="stack-actions">
+            <button class="primary" id="exportJsonBtn" type="button">JSON-Sicherung exportieren</button>
+            <button class="secondary" id="exportActivitiesCsvBtn" type="button">Protokoll als CSV</button>
+            <button class="secondary" id="exportTasksCsvBtn" type="button">Aufgaben als CSV</button>
+          </div>
+        </section>
+        <section class="card">
+          <h2>Wiederherstellen</h2>
+          <p class="muted">Importiert ausschließlich eine von dieser App erzeugte JSON-Datei. Vorhandene Daten können ergänzt oder ersetzt werden.</p>
+          <div class="stack-actions">
+            <label class="file-btn secondary">JSON-Datei auswählen<input id="importFile" type="file" accept="application/json,.json" hidden></label>
+            <button class="danger ghost" id="resetDataBtn" type="button">Lokale Daten löschen</button>
+          </div>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Datenschutz-Check</h2>
+        <div class="check-grid">
+          <div class="check-item"><span>✓</span><div><strong>Keine Konten</strong><small>Kein Login, kein Passwort, kein Nutzerprofil auf einem Server.</small></div></div>
+          <div class="check-item"><span>✓</span><div><strong>Keine Tracker</strong><small>Keine Analyse-, Werbe- oder Social-Media-Skripte.</small></div></div>
+          <div class="check-item"><span>✓</span><div><strong>Keine Cloud-Synchronisation</strong><small>Deine Einträge verlassen die App nicht automatisch.</small></div></div>
+          <div class="check-item"><span>✓</span><div><strong>Manueller Export</strong><small>Private Daten werden nur auf deinen ausdrücklichen Klick exportiert.</small></div></div>
+        </div>
+      </section>
+    </section>
+
+    <section id="settings" class="view" aria-labelledby="settingsTitle">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow">ANPASSEN</p>
+          <h1 id="settingsTitle">Einstellungen</h1>
+          <p class="muted">Diese Angaben bleiben lokal und werden nicht in den öffentlichen App-Code geschrieben.</p>
+        </div>
+      </div>
+
+      <div class="grid two">
+        <section class="card">
+          <h2>Haushalt</h2>
+          <label>Bezeichnung
+            <input id="householdName" type="text" maxlength="60" placeholder="z. B. Unser Haushalt">
+          </label>
+          <label>Personen / Kürzel
+            <textarea id="membersInput" rows="4" placeholder="Eine Person pro Zeile, z. B. Person A"></textarea>
+          </label>
+          <p class="small muted">Namen sind optional. Für neutrale Auswertungen reichen „Person A“, „Person B“ usw.</p>
+        </section>
+
+        <section class="card">
+          <h2>Ampel-Regeln</h2>
+          <label>Grün ab
+            <div class="range-row"><input id="greenThreshold" type="range" min="50" max="100" step="5"><output id="greenThresholdOut"></output></div>
+          </label>
+          <label>Orange ab
+            <div class="range-row"><input id="orangeThreshold" type="range" min="10" max="90" step="5"><output id="orangeThresholdOut"></output></div>
+          </label>
+          <p class="small muted">Die Ampel basiert auf erledigten Aufwandspunkten im Verhältnis zu allen protokollierten Punkten des Zeitraums.</p>
+        </section>
+      </div>
+
+      <section class="card">
+        <h2>Aufwandspunkte</h2>
+        <div class="weight-grid">
+          <label>Klein<input id="weightSmall" type="number" min="1" max="10"></label>
+          <label>Normal<input id="weightMedium" type="number" min="1" max="10"></label>
+          <label>Groß<input id="weightLarge" type="number" min="1" max="10"></label>
+        </div>
+        <p class="small muted">Die Punkte ersetzen eine Stoppuhr. So können viele kleine und wenige große Tätigkeiten trotzdem sinnvoll zusammengefasst werden.</p>
+      </section>
+
+      <div class="save-row"><button class="primary" id="saveSettingsBtn" type="button">Einstellungen speichern</button></div>
+    </section>
+  </main>
+
+  <dialog id="activityDialog" class="modal">
+    <form id="activityForm" method="dialog">
+      <div class="modal-head">
+        <div><p class="eyebrow">PROTOKOLL</p><h2 id="activityDialogTitle">Eintrag dokumentieren</h2></div>
+        <button class="icon-btn close-dialog" value="cancel" type="button" aria-label="Schließen">×</button>
+      </div>
+      <input id="activityId" type="hidden">
+      <div class="form-grid two">
+        <label class="span-2">Tätigkeit
+          <div class="voice-wrap">
+            <input id="activityTitle" type="text" required maxlength="120" placeholder="z. B. Küche gereinigt">
+            <button class="voice-btn" id="activityVoiceBtn" type="button" title="Spracheingabe">🎙</button>
+          </div>
+        </label>
+        <label>Datum<input id="activityDate" type="date" required></label>
+        <label>Kategorie<select id="activityCategory"></select></label>
+        <label>Status
+          <select id="activityStatus" required>
+            <option value="done">🟢 Erledigt</option>
+            <option value="partial">🟠 Teilweise</option>
+            <option value="missed">🔴 Nicht erledigt</option>
+          </select>
+        </label>
+        <label>Aufwand
+          <select id="activityEffort" required>
+            <option value="small">Klein</option>
+            <option value="medium" selected>Normal</option>
+            <option value="large">Groß</option>
+          </select>
+        </label>
+        <label>Person<select id="activityMember"></select></label>
+        <label>Optional: Dauer (Min.)<input id="activityMinutes" type="number" min="0" max="1440" placeholder="kein Muss"></label>
+        <label class="span-2">Notiz
+          <div class="voice-wrap textarea-wrap">
+            <textarea id="activityNotes" rows="4" maxlength="1000" placeholder="Optional: Was genau wurde gemacht? Besonderheiten?"></textarea>
+            <button class="voice-btn" id="activityNotesVoiceBtn" type="button" title="Spracheingabe">🎙</button>
+          </div>
+        </label>
+      </div>
+      <div id="speechNotice" class="privacy-banner warning small" hidden>Spracheingabe kann – abhängig vom Browser – zur Erkennung an einen externen Sprachdienst übertragen werden. Es wird keine Audioaufnahme in dieser App gespeichert.</div>
+      <div class="modal-actions"><button class="secondary close-dialog" type="button">Abbrechen</button><button class="primary" type="submit">Speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="taskDialog" class="modal">
+    <form id="taskForm" method="dialog">
+      <div class="modal-head">
+        <div><p class="eyebrow">AUFGABE</p><h2 id="taskDialogTitle">Aufgabe anlegen</h2></div>
+        <button class="icon-btn close-dialog" value="cancel" type="button" aria-label="Schließen">×</button>
+      </div>
+      <input id="taskId" type="hidden">
+      <div class="form-grid two">
+        <label class="span-2">Aufgabe<input id="taskTitle" type="text" maxlength="120" required placeholder="z. B. Mülltonnen rausstellen"></label>
+        <label>Fällig am<input id="taskDueDate" type="date"></label>
+        <label>Kategorie<select id="taskCategory"></select></label>
+        <label>Priorität
+          <select id="taskPriority"><option value="low">Niedrig</option><option value="normal" selected>Normal</option><option value="high">Hoch</option></select>
+        </label>
+        <label>Person<select id="taskMember"></select></label>
+        <label>Aufwand
+          <select id="taskEffort"><option value="small">Klein</option><option value="medium" selected>Normal</option><option value="large">Groß</option></select>
+        </label>
+        <label>Wiederholung
+          <select id="taskRepeat"><option value="none">Keine</option><option value="daily">Täglich</option><option value="weekly">Wöchentlich</option><option value="monthly">Monatlich</option></select>
+        </label>
+        <label class="span-2">Notiz<textarea id="taskNotes" rows="3" maxlength="1000"></textarea></label>
+      </div>
+      <div class="modal-actions"><button class="secondary close-dialog" type="button">Abbrechen</button><button class="primary" type="submit">Speichern</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog" class="modal small-modal">
+    <form method="dialog" id="confirmForm">
+      <h2 id="confirmTitle">Bestätigen</h2>
+      <p id="confirmText" class="muted"></p>
+      <div class="modal-actions"><button class="secondary" value="cancel">Abbrechen</button><button class="danger" id="confirmOk" value="default">Bestätigen</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
